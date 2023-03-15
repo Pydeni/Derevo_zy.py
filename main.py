@@ -5,6 +5,8 @@ import random
 from graphviz import Digraph
 from openpyxl import load_workbook
 import os
+import warnings
+warnings.filterwarnings('ignore')
 
 # отключаем лимит на строки
 pd.set_option('display.max_rows', None)
@@ -20,12 +22,12 @@ work_path = pathlib.Path.cwd()
 
 # path1 = Path(work_path, 'Выгрузка СХ - копия.xlsx')
 path2 = Path(work_path, 'Архивные.xlsx')
-# path3 = Path(work_path, 'Исходные.xlsx')
+path3 = Path(work_path, 'Исходные.xlsx')
 
 # Читаем файлы, v  - выгрузка СХ(нужна была для функции чистки)
 # v = pd.read_excel(path1)
 arhiv = pd.read_excel(path2)
-# ishod_df = pd.read_excel(path3)
+ishod_df = pd.read_excel(path3)
 
 # Разкоментить, если нужна функция чистки
 # Сравнивает  кн в архивном файле и выгрузке и удаляет строки из выгрузки, при совпадении
@@ -61,18 +63,17 @@ arhiv = pd.read_excel(path2)
 
 df_sheets = {} # Словарь для добавления разных листов зу, в один эксель
 # Cписок уникальных земельный участков
-zem_uch = [i for i in arhiv["КН исходного"][1:].unique()]
+zem_uch = [i for i in ishod_df["Исходные Зу"]]
 kvartal = {str(i.split('_')[0] +'_'+ i.split('_')[1] + '_'+ i.split('_')[2]) for i in zem_uch if isinstance(i,str)}
 # Проходимся по множеству кварталов и добавляем в список участки с однаковым кварталом
 for kv in kvartal:
-    # if not os.path.isdir(f'.//Готовые_деревья/{kv}.xlsx'):
-    #     os.mkdir(f".//Готовые_деревья/{kv}")
+    if not os.path.isdir(f'.//Готовые_деревья/{kv}.xlsx'):
+        os.mkdir(f".//Готовые_деревья/{kv}")
     sp = [zem for zem in zem_uch if str(zem.split('_')[0] +'_'+ zem.split('_')[1] + '_'+ zem.split('_')[2]) == kv]
 
     #  Добавляем исходный участок, помещаем в new_df и ищем его детей
     for i in sp:
-        i = "50_06_0000000_65"
-        # print(f"Начало работы со списком, зу {sp[sp.index(f'{i}')]}")
+        print(f"Начало работы со списком, зу {sp[sp.index(f'{i}')]}")
         new_df = pd.DataFrame()
         # Зу для проверки - 50_13_0030417_36   50_13_0000000_252  50:18:0000000:113  50_16_0203013_8 50_16_0000000_55 50_16_0000000_35 50_06_0000000_65
 
@@ -164,17 +165,19 @@ for kv in kvartal:
                         if m != 0:
                             t_zy[kolvo].append(arhiv['КН образованного'].values[m])
 
-                    if m == 0:
+                    if m == 0 and len(vnul_ishod) == 0:
                         t_s = t_s.append(pd.Series([None]))
                     else:
                         t_s = t_s.append(pd.Series([arhiv['Площадь'].values[i] for i in vnul_ishod]))
-                        t_s = t_s.append(pd.Series(arhiv['Площадь образованного'].values[index_obrazovan[kolvo]]))
+                        if sum(index_obrazovan[kolvo]) != 0:
+                            t_s = t_s.append(pd.Series(arhiv['Площадь образованного'].values[index_obrazovan[kolvo]]))
                     t_s.reset_index(drop=True, inplace=True)
-                    if m == 0:
+                    if m == 0 and len(vnul_ishod) == 0:
                         t_pravo = t_pravo.append(pd.Series([None]))
                     else:
                         t_pravo = t_pravo.append(pd.Series([arhiv['статус'].values[i] for i in vnul_ishod]))
-                        t_pravo = t_pravo.append(pd.Series(arhiv['статус образованного'].values[index_obrazovan[kolvo]]))
+                        if sum(index_obrazovan[kolvo]) != 0:
+                            t_pravo = t_pravo.append(pd.Series(arhiv['статус образованного'].values[index_obrazovan[kolvo]]))
                     t_pravo.reset_index(drop=True, inplace=True)
                     kolvo += 1
                 kolvo = 0
@@ -193,7 +196,7 @@ for kv in kvartal:
 
 
 
-        new_df.to_excel(r'C:\Users\denis.osipov\PycharmProjects\DEREVO\zy.xlsx', index= False)
+
 
 
         # # Функция поиска связей детей и дальше
@@ -220,7 +223,7 @@ for kv in kvartal:
         # # # print(x.head(30)) # Показывает первые 30 строк датафрейма.
 
         #Добавляем датафреймы в словарь, ключ - кадастровый номер(он же будет названием листа)
-        df_sheets[f'{i}'] = x
+        df_sheets[f'{i}'] = new_df
     print(f"Окончание работы со списком, по кварталу {kv}, длина словаря {len(df_sheets)}, идет запись в листы")
 
     # Записываем фреймы в разные листы и сохраняем
