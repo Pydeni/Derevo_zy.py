@@ -68,176 +68,155 @@ kvartal = {str(i.split('_')[0] +'_'+ i.split('_')[1] + '_'+ i.split('_')[2]) for
 # Проходимся по множеству кварталов и добавляем в список участки с однаковым кварталом
 for kv in kvartal:
     if not os.path.isdir(f'.//Готовые_деревья/{kv}.xlsx'):
-        os.mkdir(f".//Готовые_деревья/{kv}")
-    sp = [zem for zem in zem_uch if str(zem.split('_')[0] +'_'+ zem.split('_')[1] + '_'+ zem.split('_')[2]) == kv]
+        try:
+            os.mkdir(f".//Готовые_деревья/{kv}")
+        except FileExistsError:
+            continue
+        sp = [zem for zem in zem_uch if str(zem.split('_')[0] +'_'+ zem.split('_')[1] + '_'+ zem.split('_')[2]) == kv]
 
-    #  Добавляем исходный участок, помещаем в new_df и ищем его детей
-    for i in sp:
-        print(f"Начало работы со списком, зу {sp[sp.index(f'{i}')]}")
-        new_df = pd.DataFrame()
-        # Зу для проверки - 50_13_0030417_36   50_13_0000000_252  50:18:0000000:113  50_16_0203013_8 50_16_0000000_55 50_16_0000000_35 50_06_0000000_65
-
-
-        #  Получаем индексы исходного зу
-        index_isxod_arhiv = arhiv.index[arhiv['КН исходного'] == i].tolist()
-
-        # Создаем столбцы в дф, добавляем значения индексов для исходного и ребенка
-        new_df["Исходный зу"] = [arhiv['КН исходного'].values[i] for i in index_isxod_arhiv]
-        new_df["Площадь"] = arhiv['Площадь исходного'].values[index_isxod_arhiv[0]]
-        new_df["Право"] = arhiv['статус исходного'].values[index_isxod_arhiv[0]]
+        #  Добавляем исходный участок, помещаем в new_df и ищем его детей
+        for i in sp:
+            print(f"Начало работы с кварталом {kv}, зу {sp[sp.index(f'{i}')]}")
+            new_df = pd.DataFrame()
+            # Зу для проверки - 50_13_0030417_36   50_13_0000000_252  50:18:0000000:113  50_16_0203013_8 50_16_0000000_55 50_16_0000000_35 50_06_0000000_65
 
 
-        count_zy = 0
+            #  Получаем индексы исходного зу
+            index_isxod_arhiv = arhiv.index[arhiv['КН исходного'] == i].tolist()
 
-        new_df[f"Последующий Зу_{count_zy}"] = [arhiv['КН ЗУ'].values[i] for i in index_isxod_arhiv]
-        new_df[f"Площадь Зу_{count_zy}"] = [arhiv['Площадь'].values[i] for i in index_isxod_arhiv]
-        new_df[f"Право Зу_{count_zy}"] = [arhiv['статус'].values[i] for i in index_isxod_arhiv]
-        # for kolonka in new_df:
-        #     new_df[kolonka] = pd.Series(new_df[kolonka].unique())
-        # new_df = new_df.drop_duplicates()
-
-        # Удаляем дубликаты и сбрасываем индексы
-        new_df = new_df.drop_duplicates()
-        new_df.reset_index(drop=True, inplace=True)
+            # Создаем столбцы в дф, добавляем значения индексов для исходного и ребенка
+            new_df["Исходный зу"] = [arhiv['КН исходного'].values[i] for i in index_isxod_arhiv]
+            new_df["Площадь"] = arhiv['Площадь исходного'].values[index_isxod_arhiv[0]]
+            new_df["Право"] = arhiv['статус исходного'].values[index_isxod_arhiv[0]]
 
 
+            count_zy = 0
 
+            new_df[f"Последующий Зу_{count_zy}"] = [arhiv['КН ЗУ'].values[i] for i in index_isxod_arhiv]
+            new_df[f"Площадь Зу_{count_zy}"] = [arhiv['Площадь'].values[i] for i in index_isxod_arhiv]
+            new_df[f"Право Зу_{count_zy}"] = [arhiv['статус'].values[i] for i in index_isxod_arhiv]
+            # for kolonka in new_df:
+            #     new_df[kolonka] = pd.Series(new_df[kolonka].unique())
+            # new_df = new_df.drop_duplicates()
 
-
-
-
-        # # Получаем индексы ребенка
-        # index_detei_ishod = [arhiv.index[arhiv['КН исходного'] == i].tolist() for i in new_df[f"Последующий Зу_{count_zy}"]]
-        #
-        #
-        #
-        # # Создаем временные серии для будущей колонки внука (зу, площадь и право)
-        # temp_zy = pd.Series()
-        # temp_s = pd.Series()
-        # temp_pravo = pd.Series()
-        # kolvo = 0
-        # # Добавляем значения индексов ребенка и значения индекса внука в одну серию
-        # for detei_ishod in index_detei_ishod:
-        #     temp_zy = temp_zy.append(pd.Series([[arhiv['КН ЗУ'].values[i] for i in detei_ishod]]))
-        #     # Сбрасываем индексы
-        #     temp_zy.reset_index(drop=True, inplace=True)
-        #     for qq in index_isxod_arhiv[kolvo]:
-        #         temp_zy[kolvo].append(arhiv['КН образованного'].values[qq])
-        #
-        #     temp_s = temp_s.append(pd.Series(arhiv['Площадь'].values[i] for i in detei_ishod))
-        #     temp_s = temp_s.append(pd.Series(arhiv['Площадь образованного'].values[index_isxod_arhiv[kolvo]]))
-        #     temp_s.reset_index(drop=True, inplace=True)
-        #     temp_pravo = temp_pravo.append(pd.Series([arhiv['статус'].values[i] for i in detei_ishod]))
-        #     temp_pravo = temp_pravo.append(pd.Series(arhiv['статус образованного'].values[index_isxod_arhiv[kolvo]]))
-        #     temp_pravo.reset_index(drop=True, inplace=True)
-        #     kolvo += 1
-        # kolvo = 0
-        #
-        # # Создаем новые столбцы и добавляем в них серии
-        # count_zy += 1
-        # new_df[f"Последующий Зу_{count_zy}"] = temp_zy
-        # new_df = new_df.explode(f"Последующий Зу_{count_zy}", ignore_index=True)
-        # new_df[f"Площадь Зу_{count_zy}"] = temp_s
-        # new_df[f"Право Зу_{count_zy}"] = temp_pravo
-        #
-        # # Удаляем дубликаты и сбрасываем индексы
-        # new_df = new_df.drop_duplicates()
-        # new_df.reset_index(drop=True, inplace=True)
-
-        while True:
-            # Получаем индексы внука
-            index_vnuk_ishod = [arhiv.index[arhiv['КН исходного'] == i].tolist() for i in new_df[f"Последующий Зу_{count_zy}"]]
-            index_obrazovan= [arhiv.index[arhiv['КН ЗУ'] == i].tolist() for i in new_df[f"Последующий Зу_{count_zy}"]]
-            index_obrazovan = [[0] if i == [] else i for i in index_obrazovan]
-            proverka_ind = [x for i in index_obrazovan for x in i]
-            if sum(proverka_ind) == 0:
-                break
-            else:
-                # Создаем временные серии для будущей колонки внука (зу, площадь и право)
-                t_zy = pd.Series()
-                t_s = pd.Series()
-                t_pravo = pd.Series()
-                kolvo = 0
-                for vnul_ishod in index_vnuk_ishod:
-                    t_zy = t_zy.append(pd.Series([[arhiv['КН ЗУ'].values[i] for i in vnul_ishod]]))
-                    t_zy.reset_index(drop=True, inplace=True)
-                    for m in index_obrazovan[kolvo]:
-                        if m != 0:
-                            t_zy[kolvo].append(arhiv['КН образованного'].values[m])
-
-                    if m == 0 and len(vnul_ishod) == 0:
-                        t_s = t_s.append(pd.Series([None]))
-                    else:
-                        t_s = t_s.append(pd.Series([arhiv['Площадь'].values[i] for i in vnul_ishod]))
-                        if sum(index_obrazovan[kolvo]) != 0:
-                            t_s = t_s.append(pd.Series(arhiv['Площадь образованного'].values[index_obrazovan[kolvo]]))
-                    t_s.reset_index(drop=True, inplace=True)
-                    if m == 0 and len(vnul_ishod) == 0:
-                        t_pravo = t_pravo.append(pd.Series([None]))
-                    else:
-                        t_pravo = t_pravo.append(pd.Series([arhiv['статус'].values[i] for i in vnul_ishod]))
-                        if sum(index_obrazovan[kolvo]) != 0:
-                            t_pravo = t_pravo.append(pd.Series(arhiv['статус образованного'].values[index_obrazovan[kolvo]]))
-                    t_pravo.reset_index(drop=True, inplace=True)
-                    kolvo += 1
-                kolvo = 0
-
-                # Создаем новые столбцы и добавляем в них серии
-                count_zy += 1
-                new_df[f"Последующий Зу_{count_zy}"] = t_zy
-                new_df = new_df.explode(f"Последующий Зу_{count_zy}", ignore_index=True)
-                new_df[f"Площадь Зу_{count_zy}"] = t_s
-                new_df[f"Право Зу_{count_zy}"] = t_pravo
-
-
-                # Удаляем дубликаты и сбрасываем индексы
-                new_df = new_df.drop_duplicates()
-                new_df.reset_index(drop=True, inplace=True)
+            # Удаляем дубликаты и сбрасываем индексы
+            new_df = new_df.drop_duplicates()
+            new_df.reset_index(drop=True, inplace=True)
 
 
 
 
 
 
-        # # Функция поиска связей детей и дальше
-        # def poisk_detei(arhiv, new_df, count_zy):
-        #     index_posl = []
-        #     while True:
-        #         for zy_posl_1 in new_df[f"Последующий Зу_{count_zy}"]:
-        #                 index_posl.append(arhiv.index[arhiv['КН ЗУ'] == zy_posl_1].tolist())
-        #         index_posl_pl = [[0] if i == [] else i for i in index_posl]
-        #         proverka_ind = [x for i in index_posl_pl for x in i]
-        #         count_zy += 1
-        #         if sum(proverka_ind) == 0:
-        #             break
-        #         else:
-        #             new_df[f"Последующий Зу_{count_zy}"] = pd.Series([arhiv['КН образованного'].values[i] for i in index_posl])
-        #             new_df = new_df.explode(f"Последующий Зу_{count_zy}", ignore_index=True)
-        #             new_df[f"Площадь Зу_{count_zy}"] = pd.Series([arhiv['Площадь образованного'].values[i] for i in proverka_ind])
-        #             new_df[f"Право Зу_{count_zy}"]  = pd.Series([arhiv['статус образованного'].values[i] for i in proverka_ind])
-        #         index_posl = []
-        #
-        #     return new_df
-        # x = poisk_detei(arhiv, new_df,count_zy)
-        # # x = x.fillna("ychastok_otsutstvuet") # Разкоментить, если надо заменить значение nan
-        # # # print(x.head(30)) # Показывает первые 30 строк датафрейма.
 
-        #Добавляем датафреймы в словарь, ключ - кадастровый номер(он же будет названием листа)
-        df_sheets[f'{i}'] = new_df
-    print(f"Окончание работы со списком, по кварталу {kv}, длина словаря {len(df_sheets)}, идет запись в листы")
+            # # Получаем индексы ребенка
+            # index_detei_ishod = [arhiv.index[arhiv['КН исходного'] == i].tolist() for i in new_df[f"Последующий Зу_{count_zy}"]]
+            #
+            #
+            #
+            # # Создаем временные серии для будущей колонки внука (зу, площадь и право)
+            # temp_zy = pd.Series()
+            # temp_s = pd.Series()
+            # temp_pravo = pd.Series()
+            # kolvo = 0
+            # # Добавляем значения индексов ребенка и значения индекса внука в одну серию
+            # for detei_ishod in index_detei_ishod:
+            #     temp_zy = temp_zy.append(pd.Series([[arhiv['КН ЗУ'].values[i] for i in detei_ishod]]))
+            #     # Сбрасываем индексы
+            #     temp_zy.reset_index(drop=True, inplace=True)
+            #     for qq in index_isxod_arhiv[kolvo]:
+            #         temp_zy[kolvo].append(arhiv['КН образованного'].values[qq])
+            #
+            #     temp_s = temp_s.append(pd.Series(arhiv['Площадь'].values[i] for i in detei_ishod))
+            #     temp_s = temp_s.append(pd.Series(arhiv['Площадь образованного'].values[index_isxod_arhiv[kolvo]]))
+            #     temp_s.reset_index(drop=True, inplace=True)
+            #     temp_pravo = temp_pravo.append(pd.Series([arhiv['статус'].values[i] for i in detei_ishod]))
+            #     temp_pravo = temp_pravo.append(pd.Series(arhiv['статус образованного'].values[index_isxod_arhiv[kolvo]]))
+            #     temp_pravo.reset_index(drop=True, inplace=True)
+            #     kolvo += 1
+            # kolvo = 0
+            #
+            # # Создаем новые столбцы и добавляем в них серии
+            # count_zy += 1
+            # new_df[f"Последующий Зу_{count_zy}"] = temp_zy
+            # new_df = new_df.explode(f"Последующий Зу_{count_zy}", ignore_index=True)
+            # new_df[f"Площадь Зу_{count_zy}"] = temp_s
+            # new_df[f"Право Зу_{count_zy}"] = temp_pravo
+            #
+            # # Удаляем дубликаты и сбрасываем индексы
+            # new_df = new_df.drop_duplicates()
+            # new_df.reset_index(drop=True, inplace=True)
 
-    # Записываем фреймы в разные листы и сохраняем
-    # x.to_excel(r'C:\Users\denis.osipov\PycharmProjects\DEREVO\zy.xlsx', index= False)
-    writer = pd.ExcelWriter(fr'C:\Users\denis.osipov\PycharmProjects\DEREVO\Готовые_деревья\{kv}\{kv}.xlsx', engine='xlsxwriter')
-    for sheet_name in df_sheets.keys():
-        df_sheets[sheet_name].to_excel(writer, sheet_name=sheet_name, index=False)
-        for column in df_sheets[sheet_name]:
-            column_width = max(df_sheets[sheet_name][column].astype(str).map(len).max(), len(column))
-            col_idx = df_sheets[sheet_name].columns.get_loc(column)
-            writer.sheets[sheet_name].set_column(col_idx, col_idx, column_width)
-    df_sheets = dict()
-    writer.close()
-    print(f"Окончание работы с листами, словарь очищен, квартал {kv} записан, идет создание картинки")
+            while True:
+                # Получаем индексы внука
+                index_vnuk_ishod = [arhiv.index[arhiv['КН исходного'] == i].tolist() for i in new_df[f"Последующий Зу_{count_zy}"]]
+                index_obrazovan= [arhiv.index[arhiv['КН ЗУ'] == i].tolist() for i in new_df[f"Последующий Зу_{count_zy}"]]
+                index_obrazovan = [[0] if i == [] else i for i in index_obrazovan]
+                proverka_ind = [x for i in index_obrazovan for x in i]
+                if sum(proverka_ind) == 0:
+                    break
+                else:
+                    # Создаем временные серии для будущей колонки внука (зу, площадь и право)
+                    t_zy = pd.Series()
+                    t_s = pd.Series()
+                    t_pravo = pd.Series()
+                    kolvo = 0
+                    for vnul_ishod in index_vnuk_ishod:
+                        t_zy = t_zy.append(pd.Series([[arhiv['КН ЗУ'].values[i] for i in vnul_ishod]]))
+                        t_zy.reset_index(drop=True, inplace=True)
+                        for m in index_obrazovan[kolvo]:
+                            if m != 0:
+                                t_zy[kolvo].append(arhiv['КН образованного'].values[m])
+
+                        if m == 0 and len(vnul_ishod) == 0:
+                            t_s = t_s.append(pd.Series([None]))
+                        else:
+                            t_s = t_s.append(pd.Series([arhiv['Площадь'].values[i] for i in vnul_ishod]))
+                            if sum(index_obrazovan[kolvo]) != 0:
+                                t_s = t_s.append(pd.Series(arhiv['Площадь образованного'].values[index_obrazovan[kolvo]]))
+                        t_s.reset_index(drop=True, inplace=True)
+                        if m == 0 and len(vnul_ishod) == 0:
+                            t_pravo = t_pravo.append(pd.Series([None]))
+                        else:
+                            t_pravo = t_pravo.append(pd.Series([arhiv['статус'].values[i] for i in vnul_ishod]))
+                            if sum(index_obrazovan[kolvo]) != 0:
+                                t_pravo = t_pravo.append(pd.Series(arhiv['статус образованного'].values[index_obrazovan[kolvo]]))
+                        t_pravo.reset_index(drop=True, inplace=True)
+                        kolvo += 1
+                    kolvo = 0
+
+                    # Создаем новые столбцы и добавляем в них серии
+                    count_zy += 1
+                    new_df[f"Последующий Зу_{count_zy}"] = t_zy
+                    new_df = new_df.explode(f"Последующий Зу_{count_zy}", ignore_index=True)
+                    new_df[f"Площадь Зу_{count_zy}"] = t_s
+                    new_df[f"Право Зу_{count_zy}"] = t_pravo
+
+
+                    # Удаляем дубликаты и сбрасываем индексы
+                    new_df = new_df.drop_duplicates()
+                    new_df.reset_index(drop=True, inplace=True)
+
+            # # x = x.fillna("ychastok_otsutstvuet") # Разкоментить, если надо заменить значение nan
+            # # # print(x.head(30)) # Показывает первые 30 строк датафрейма.
+
+            #Добавляем датафреймы в словарь, ключ - кадастровый номер(он же будет названием листа)
+            df_sheets[f'{i}'] = new_df
+
+        print(f"Окончание работы со списком, по кварталу {kv}, длина словаря {len(df_sheets)}, идет запись в листы")
+
+        # Записываем фреймы в разные листы и сохраняем
+        # x.to_excel(r'C:\Users\denis.osipov\PycharmProjects\DEREVO\zy.xlsx', index= False)
+        writer = pd.ExcelWriter(fr'C:\Users\denis.osipov\PycharmProjects\DEREVO\Готовые_деревья\{kv}\{kv}.xlsx', engine='xlsxwriter')
+        for sheet_name in df_sheets.keys():
+            df_sheets[sheet_name].to_excel(writer, sheet_name=sheet_name, index=False)
+            for column in df_sheets[sheet_name]:
+                column_width = max(df_sheets[sheet_name][column].astype(str).map(len).max(), len(column))
+                col_idx = df_sheets[sheet_name].columns.get_loc(column)
+                writer.sheets[sheet_name].set_column(col_idx, col_idx, column_width)
+        df_sheets = dict()
+        writer.close()
+        print(f"Окончание работы с листами, словарь очищен, квартал {kv} записан, идет создание картинки")
 
 
     # # Строим логику для графики
@@ -350,22 +329,3 @@ for kv in kvartal:
     #     # filename = g.render(filename=f'{kv}')
     #     # #Показать и сохранить схему
     #     # g.view()
-
-
-
-# y = pd.read_excel("zy.xlsx", dtype=str)
-# y = y.transpose() # меняем местами строки и столбцы
-# y.to_excel(r'C:\Users\denis.osipov\PycharmProjects\DEREVO\zy_perever.xlsx')
-# Обработка листа (выравнивает ячейки исходя из текста внутри)
-# writer = pd.ExcelWriter('zy.xlsx')
-# x.to_excel(writer, index=False)
-# # Автоматическое выравнивание ячеек
-# for column in x:
-#     column_width = max(x[column].astype(str).map(len).max(), len(column))
-#     col_idx = x.columns.get_loc(column)
-#     writer.sheets[f'Sheet1'].set_column(col_idx, col_idx, column_width)
-# writer.save()
-#
-# y = pd.read_excel("zy.xlsx", dtype=str)
-# y = y.transpose() # меняем местами строки и столбцы
-# y.to_excel(r'C:\Users\denis.osipov\PycharmProjects\DEREVO\zy_perever.xlsx')
